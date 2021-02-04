@@ -17,7 +17,7 @@ func networkRequest() {
 }
 
 func main() {
-	//defer chrometracing.Flush()
+	defer chrometracing.Flush()
 	defer chrometracing.Event("main", tidMain).Done()
 	networkRequest()
 	time.Sleep(500 * time.Millisecond)
