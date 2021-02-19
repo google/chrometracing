@@ -32,6 +32,8 @@
 #include <string>
 #include <utility>
 
+#include "absl/base/internal/sysinfo.h"
+
 namespace chrometracing {
 namespace internal {
 
@@ -65,7 +67,13 @@ class PendingEvent {
 };
 
 PendingEvent Event(std::string name, int64_t explicit_tid);
-PendingEvent Event(std::string name) { return Event(name, GetTID()); }
+PendingEvent Event(std::string name) { return Event(name, absl::base_internal::GetTID()); }
+
+
+// Compatibility definitions:
+
+std::string ProcessName(pid_t pid);
+
 
 }  // namespace chrometracing
 
