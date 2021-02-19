@@ -31,7 +31,7 @@ namespace chrometracing {
 namespace internal {
 static FILE* log_file = nullptr;
 static pid_t my_pid = 0;
-static int64 start_nanos = 0;
+static int64_t start_nanos = 0;
 
 std::string JSONEscape(const std::string& s) {
   return absl::StrReplaceAll(s, {
@@ -113,7 +113,7 @@ PendingEvent::~PendingEvent() {
 
 PendingEvent Event(std::string name) { return Event(name, GetTID()); }
 
-PendingEvent Event(std::string name, int64 tid) {
+PendingEvent Event(std::string name, int64_t tid) {
   WriteEvent(internal::TraceEvent{
       .name = name,
       .phase = internal::Phase::BEGIN,
