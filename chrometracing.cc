@@ -118,4 +118,7 @@ PendingEvent Event(std::string name, int64_t tid) {
   return PendingEvent(name, tid);
 }
 
+PendingEvent Event(std::string name) {
+  return Event(name, absl::base_internal::GetTID());
+}
 }  // namespace chrometracing
