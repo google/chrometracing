@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 add_subdirectory(abseil-cpp)
 
-add_library(chrometracing SHARED
+add_library(chrometracing
 	chrometracing.cc
 	compat.cc)
 target_link_libraries(chrometracing absl::base absl::strings)
