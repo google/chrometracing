@@ -67,7 +67,7 @@ class PendingEvent {
 };
 
 PendingEvent Event(std::string name, int64_t explicit_tid);
-PendingEvent Event(std::string name) { return Event(name, absl::base_internal::GetTID()); }
+PendingEvent Event(std::string name);
 
 
 // Compatibility definitions:
