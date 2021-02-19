@@ -32,9 +32,6 @@
 #include <string>
 #include <utility>
 
-#include "base/integral_types.h"
-#include "base/sysinfo.h"
-
 namespace chrometracing {
 namespace internal {
 
@@ -47,9 +44,9 @@ enum class Phase: char {
 struct TraceEvent {
   std::string name;
   Phase phase;
-  int64 pid;
-  int64 tid;
-  int64 time;
+  int64_t pid;
+  int64_t tid;
+  int64_t time;
   std::optional<std::string> process_name;
 };
 
@@ -67,7 +64,7 @@ class PendingEvent {
   pid_t tid_;
 };
 
-PendingEvent Event(std::string name, int64 explicit_tid);
+PendingEvent Event(std::string name, int64_t explicit_tid);
 PendingEvent Event(std::string name) { return Event(name, GetTID()); }
 
 }  // namespace chrometracing
