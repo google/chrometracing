@@ -17,14 +17,10 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#include "base/googleinit.h"
-#include "base/logging_extensions.h"
-#include "file/base/path.h"
-#include "third_party/absl/base/log_severity.h"
-#include "third_party/absl/strings/str_replace.h"
-#include "third_party/absl/strings/substitute.h"
-#include "third_party/absl/time/clock.h"
-#include "util/task/status.h"
+#include "absl/base/log_severity.h"
+#include "absl/strings/str_replace.h"
+#include "absl/strings/substitute.h"
+#include "absl/time/clock.h"
 
 namespace chrometracing {
 
@@ -69,37 +65,37 @@ std::string GetDestDir() {
   if (env_var && env_var[0] != '\0') {
     return std::string(env_var);
   }
-  return GetLoggingDirectories()[0];
+  return ".";
 }
 
-REGISTER_MODULE_INITIALIZER(initialize_log_file, {
-  start_nanos = absl::GetCurrentTimeNanos();
-  const std::string dest_dir = GetDestDir();
-  my_pid = getpid();
-  // TODO(augie): I have to be missing some obvious way to do get process name?
-  auto my_name = ProcessName(my_pid);
-  auto dest_path = file::JoinPath(
-      dest_dir, absl::Substitute("ctrace.$0.$1.trace", my_name, my_pid));
-  LOG(INFO) << "Writing Chrome trace_events (for chrome::tracing) to "
-            << dest_path;
-  log_file = fopen(dest_path.c_str(), "w");
-  if (!log_file) {
-    PLOG(INFO) << "Failed to open " << dest_path
-                << " for Chrome trace events, continuing without tracing";
+}  // namespace internal
+
+void InitializeLogFile() {
+  internal::start_nanos = absl::GetCurrentTimeNanos();
+  const std::string dest_dir = internal::GetDestDir();
+  internal::my_pid = getpid();
+  auto my_name = ProcessName(internal::my_pid);
+  auto dest_path = 
+      absl::Substitute("$0/ctrace.$1.$2.trace", dest_dir, my_name, internal::my_pid);
+  /*LOG(INFO) << "Writing Chrome trace_events (for chrome::tracing) to "
+            << dest_path;*/
+  internal::log_file = fopen(dest_path.c_str(), "w");
+  if (!internal::log_file) {
+    /*PLOG(INFO) << "Failed to open " << dest_path
+                << " for Chrome trace events, continuing without tracing";*/
     return;
   }
-  fputs("[\n", log_file);
-  WriteEvent(internal::TraceEvent{
+  fputs("[\n", internal::log_file);
+  internal::WriteEvent(internal::TraceEvent{
       .name = "process_name",
       .phase = internal::Phase::METADATA,
-      .pid = my_pid,
-      .tid = GetTID(),
+      .pid = internal::my_pid,
+      .tid = absl::base_internal::GetTID(),
       .time = 0,
       .process_name = my_name,
   });
-});
+}
 
-}  // namespace internal
 
 PendingEvent::~PendingEvent() {
   WriteEvent(internal::TraceEvent{
@@ -110,8 +106,6 @@ PendingEvent::~PendingEvent() {
       .time = ((absl::GetCurrentTimeNanos() - internal::start_nanos) / 1000),
   });
 }
-
-PendingEvent Event(std::string name) { return Event(name, GetTID()); }
 
 PendingEvent Event(std::string name, int64_t tid) {
   WriteEvent(internal::TraceEvent{
