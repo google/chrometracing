@@ -55,6 +55,8 @@ struct TraceEvent {
 std::string RenderEvent(TraceEvent e);
 }  // namespace internal
 
+void InitializeLogFile();
+
 class PendingEvent {
  public:
   PendingEvent(std::string name, pid_t tid)
