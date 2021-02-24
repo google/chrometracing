@@ -19,5 +19,7 @@ project(chrometracing VERSION 0.0)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
+enable_testing()
+
 add_subdirectory(abseil-cpp)
 add_subdirectory(cc)
