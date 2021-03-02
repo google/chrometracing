@@ -14,8 +14,8 @@
 
 #include "chrometracing.h"
 
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gunit.h"
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
 
 namespace {
 
@@ -49,3 +49,9 @@ TEST(ChromeTracing, EventRenderCorrectly) {
 }
 
 }  // namespace
+
+int main(int argc, char **argv) {
+    ::testing::InitGoogleMock(&argc, argv);
+    return RUN_ALL_TESTS();
+}
+

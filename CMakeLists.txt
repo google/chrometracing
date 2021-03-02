@@ -19,7 +19,16 @@ project(chrometracing VERSION 0.0)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
+# Allow linking against libraries from other directories.
+cmake_policy(SET CMP0079 NEW)
+# Allow overriding options with a regular variable.
+cmake_policy(SET CMP0077 NEW)
+
 enable_testing()
 
+set(INSTALL_GTEST off CACHE BOOL "Install googletest")
+
 add_subdirectory(abseil-cpp)
+add_subdirectory(googletest)
 add_subdirectory(cc)
+

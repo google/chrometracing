@@ -23,5 +23,10 @@ add_executable(chrometracing_init_test chrometracing_init_test.cc)
 target_link_libraries(chrometracing_init_test chrometracing absl::base absl::strings absl::time)
 add_test(init chrometracing_init_test)
 
+add_executable(chrometracing_test chrometracing_test.cc)
+target_link_libraries(chrometracing_test chrometracing absl::base absl::strings absl::time gmock)
+add_test(chrometracing_test chrometracing_test)
+
+
 install(TARGETS chrometracing DESTINATION lib)
 install(FILES chrometracing.h DESTINATION include)
