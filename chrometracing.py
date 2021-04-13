@@ -84,9 +84,11 @@ class PendingEvent(object):
         'tid': self.tid,
         'ts': microseconds_since_trace_start(),
     })
+    _release_tid(self.tid)
 
 
-def event(name, tid=tracePid):
+def event(name):
+  tid = _tid()
   write_event({
       'name': name,
       'ph': 'B',  # Phase: Begin
@@ -102,3 +104,25 @@ def flush():
   if not traceFile:
     return
   traceFile.flush()
+
+# tids is a chrome://tracing thread id pool. Python does not have threads or
+# thread ids (unlike e.g. Java or C++, but similar to Go), so we need to
+# maintain our own identifier. The chrome://tracing file format requires a
+# numeric thread id, so we just increment whenever we need a thread id, and
+# reuse the ones no longer in use.
+tids = []
+
+
+def _tid():
+  # Re-use released tids if any:
+  for tid, used in enumerate(tids):
+    if not used:
+      tids[tid] = True
+      return tid
+  tid = len(tids)
+  tids.append(True)
+  return tid
+
+
+def _release_tid(tid):
+  tids[tid] = False
