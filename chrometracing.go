@@ -38,15 +38,38 @@ var trace = struct {
 	pid: uint64(os.Getpid()),
 }
 
-var out = setup()
+var out = setup(false)
 
 // Path returns the full path of the chrome://tracing trace_event file for
 // display in log messages.
 func Path() string { return out }
 
-func setup() string {
+// EnableTracing turns on tracing, regardless of running in a test or
+// not. Tracing is enabled by default if the CHROMETRACING_DIR environment
+// variable is present and non-empty.
+func EnableTracing() {
+	trace.fileMu.Lock()
+	alreadyEnabled := trace.file != nil
+	trace.fileMu.Unlock()
+	if alreadyEnabled {
+		return
+	}
+	out = setup(true)
+}
+
+func setup(overrideEnable bool) string {
+	inTest := os.Getenv("TEST_TMPDIR") != ""
+	explicitlyEnabled := os.Getenv("CHROMETRACING_DIR") != ""
+	enableTracing := inTest || explicitlyEnabled || overrideEnable
+	if !enableTracing {
+		return ""
+	}
+
 	var err error
 	dir := os.Getenv("TEST_UNDECLARED_OUTPUTS_DIR")
+	if dir == "" {
+		dir = os.Getenv("CHROMETRACING_DIR")
+	}
 	if dir == "" {
 		dir = os.TempDir()
 	}
