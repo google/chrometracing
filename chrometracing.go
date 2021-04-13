@@ -143,6 +143,7 @@ func (pe *PendingEvent) Done() {
 		Tid:   pe.tid,
 		Time:  float64(time.Since(trace.start).Microseconds()),
 	})
+	releaseTid(pe.tid)
 }
 
 // Event logs a unit of work. To instrument a Go function, use e.g.:
@@ -159,10 +160,11 @@ func (pe *PendingEvent) Done() {
 //     cmd.Init()
 //     ev.Done()
 //   }
-func Event(name string, tid uint64) *PendingEvent {
+func Event(name string) *PendingEvent {
 	if trace.file == nil {
 		return &PendingEvent{}
 	}
+	tid := tid()
 	writeEvent(&traceinternal.ViewerEvent{
 		Name:  name,
 		Phase: begin,
@@ -170,15 +172,56 @@ func Event(name string, tid uint64) *PendingEvent {
 		Tid:   tid,
 		Time:  float64(time.Since(trace.start).Microseconds()),
 	})
-	return &PendingEvent{name, tid}
+	return &PendingEvent{
+		name: name,
+		tid:  tid,
+	}
 }
 
-// Flush should be called before your program terminates, and/or periodically
-// for long-running programs, to flush any pending chrome://tracing events out
-// to disk.
-func Flush() error {
-	if err := trace.file.Sync(); err != nil {
-		return fmt.Errorf("flushing trace file: %v", err)
+// tids is a chrome://tracing thread id pool. Go does not permit accessing the
+// goroutine id, so we need to maintain our own identifier. The chrome://tracing
+// file format requires a numeric thread id, so we just increment whenever we
+// need a thread id, and reuse the ones no longer in use.
+//
+// In practice, parallelized sections of the code (many goroutines) end up using
+// only as few thread ids as are concurrently in use, and the rest of the events
+// mirror the code call stack nicely. See e.g. http://screen/7MPcAcvXQNUE3JZ
+var tids struct {
+	sync.Mutex
+
+	// We allocate chrome://tracing thread ids based on the index of the
+	// corresponding entry in the used slice.
+	used []bool
+
+	// next points to the earliest unused tid to consider for the next tid to
+	// hand out. This is purely a performance optimization to avoid O(n) slice
+	// iteration.
+	next int
+}
+
+func tid() uint64 {
+	tids.Lock()
+	defer tids.Unlock()
+	// re-use released tids if any
+	for t := tids.next; t < len(tids.used); t++ {
+		if !tids.used[t] {
+			tids.used[t] = true
+			tids.next = t + 1
+			return uint64(t)
+		}
 	}
-	return nil
+	// allocate a new tid
+	t := len(tids.used)
+	tids.used = append(tids.used, true)
+	tids.next = t + 1
+	return uint64(t)
+}
+
+func releaseTid(t uint64) {
+	tids.Lock()
+	defer tids.Unlock()
+	tids.used[int(t)] = false
+	if tids.next > int(t) {
+		tids.next = int(t)
+	}
 }
