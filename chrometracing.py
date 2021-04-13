@@ -24,8 +24,16 @@ import time
 
 def _open_trace_file():
   """Opens the per-process trace file."""
+  in_test = os.getenv('TEST_TMPDIR')
+  explicitly_enabled = os.getenv('CHROMETRACING_DIR')
+  enable_tracing = in_test or explicitly_enabled
+  if not enable_tracing:
+    return None
+  output_dir = os.getenv(
+      'TEST_UNDECLARED_OUTPUTS_DIR',
+      default=os.getenv('CHROMETRACING_DIR', default='/usr/local/google/tmp'))
   fn = os.path.join(
-      os.getenv('TEST_UNDECLARED_OUTPUTS_DIR', default='/usr/local/google/tmp'),
+      output_dir,
       'ctrace.%s.%d.trace' % (os.path.basename(sys.argv[0]), os.getpid()))
   f = open(fn, mode='w')
   # We only ever open a JSON array. Ending the array is optional as per
@@ -44,6 +52,8 @@ def microseconds_since_trace_start():
 
 
 def write_event(ev):
+  if not traceFile:
+    return
   traceFile.write(json.dumps(ev))
   traceFile.write(',\n')
 
@@ -89,4 +99,6 @@ def event(name, tid=tracePid):
 
 def flush():
   """Flushes the trace file to disk."""
+  if not traceFile:
+    return
   traceFile.flush()
