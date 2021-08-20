@@ -8,10 +8,10 @@ chrome://tracing.
 
 Language | Status
 ---------|------------------------------
-C++      | Work In Progress
+C++      | Implemented
 Go       | Implemented: [github.com/google/chrometracing](https://pkg.go.dev/github.com/google/chrometracing)
-Python   | Implemented, but not released
-Java     | Work In Progress
+Python   | Implemented, [but not released](https://github.com/google/chrometracing/issues/7)
+Java     | Implemented, [but not open-sourced](https://github.com/google/chrometracing/issues/6)
 
 ## Go demo
 
