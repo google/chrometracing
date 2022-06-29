@@ -225,3 +225,15 @@ func releaseTid(t uint64) {
 		tids.next = int(t)
 	}
 }
+
+// Flush should be called before your program terminates, and/or periodically
+// for long-running programs, to flush any pending chrome://tracing events out
+// to disk.
+func Flush() error {
+	trace.fileMu.Lock()
+	defer trace.fileMu.Unlock()
+	if err := trace.file.Sync(); err != nil {
+		return fmt.Errorf("flushing trace file: %v", err)
+	}
+	return nil
+}
